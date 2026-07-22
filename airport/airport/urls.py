@@ -22,6 +22,11 @@ from rest_framework import routers
 
 router = routers.DefaultRouter()
 router.register(r'tickets', views.TicketViewSet)
+router.register(r'flights', views.FlightViewSet)
+router.register(r'airlines', views.AirlineViewSet)
+router.register(r'airplanes', views.AirplaneSerializerViewSet)
+router.register(r'countries', views.CountryViewSet)
+router.register(r'airports', views.AirportViewSet)
 
 urlpatterns = [
     path("", include(router.urls)),
