@@ -1,4 +1,4 @@
-from .air_model import Airline, Airplane, Airport, Country
-from .ticket_model import Ticket
-from .flight_model import Flight
+from .geography_models import Airport, Country
+from .aviation_models import Airline, Airplane
+from .booking_models import Flight, Ticket
 from .user_model import User
