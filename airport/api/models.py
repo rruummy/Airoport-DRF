@@ -71,6 +71,7 @@ class Ticket(models.Model):
         ('booked', 'Booked'),
         ('cancelled', 'Cancelled'),
         ('used', 'Used'),
+        ('paid', 'Paid')
     ]
 
     user    = models.ForeignKey('User', on_delete=models.CASCADE)
