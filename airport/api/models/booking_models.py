@@ -37,4 +37,4 @@ class Flight(models.Model):
     status           = models.CharField(max_length=20, choices=STATUS)
 
     def __str__(self):
-        return f"departure: {self.departure_airport} -> arrival: {self.arrival_airport}"
+        return f"{self.departure_airport} -> {self.arrival_airport}"

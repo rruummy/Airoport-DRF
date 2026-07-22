@@ -5,7 +5,7 @@ class Airline(models.Model):
     airport = models.ForeignKey('Airport', on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.name
+        return f"{self.name}"
  
 class Airplane(models.Model):
     model   = models.CharField(max_length=255)
