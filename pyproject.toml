@@ -14,6 +14,7 @@ dependencies = [
 ]
 [tool.ruff]
 exclude = [
+    "__init__.py",
     ".bzr",
     ".direnv",
     ".eggs",
