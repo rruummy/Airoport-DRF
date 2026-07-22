@@ -1,7 +1,8 @@
 from rest_framework import serializers
+from api.models.booking_models import Ticket
 
 class TicketSerializer(serializers.ModelSerializer):
-    user = serializers.IntegerField()
-    flight = serializers.IntegerField()
-    seat_number = serializers.IntegerField()
-    status = serializers.CharField()
+    class Meta:
+        model = Ticket
+        fields = '__all__'
+
