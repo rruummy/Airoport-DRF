@@ -43,7 +43,7 @@ class UserProfileGetView(generics.RetrieveAPIView):
 
 class UserProfileUpdateView(generics.UpdateAPIView):
     serializer_class = UserProfileSerializer
-    permission_classes = [IsAdminRole]
+    permission_classes = [IsUserRole]
     http_method_names = ["patch"]
 
     def get_object(self):
