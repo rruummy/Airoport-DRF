@@ -43,6 +43,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_spectacular',
     'drf_spectacular_sidecar',
+    'user',
+    'flights',
+    'tickets',
 ]
 SPECTACULAR_SETTINGS = {
     'SWAGGER_UI_DIST': 'SIDECAR',  # shorthand to use the sidecar instead
@@ -51,7 +54,7 @@ SPECTACULAR_SETTINGS = {
     # OTHER SETTINGS
 }
 
-AUTH_USER_MODEL = 'api.User'
+AUTH_USER_MODEL = 'user.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

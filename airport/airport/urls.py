@@ -23,21 +23,24 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
-from api import views
+from flights.views import FlightViewSet, AirportViewSet, AirlineViewSet, AirplaneSerializerViewSet, CountryViewSet
+from tickets.views import TicketViewSet
 from rest_framework import routers
+from user.views import UserView
 
 router = routers.DefaultRouter()
-router.register(r'tickets', views.TicketViewSet)
-router.register(r'flights', views.FlightViewSet)
-router.register(r'airlines', views.AirlineViewSet)
-router.register(r'airplanes', views.AirplaneSerializerViewSet)
-router.register(r'countries', views.CountryViewSet)
-router.register(r'airports', views.AirportViewSet)
+router.register(r'tickets', TicketViewSet)
+router.register(r'flights', FlightViewSet)
+router.register(r'airlines', AirlineViewSet)
+router.register(r'airplanes', AirplaneSerializerViewSet)
+router.register(r'countries', CountryViewSet)
+router.register(r'airports', AirportViewSet)
+router.register(r'users', UserView)
 
 urlpatterns = [
     path('', include(router.urls)),
     path('admin/', admin.site.urls),
-    path('api-auth/', include('rest_framework.urls')),
+    path('api/auth/', include('rest_framework.urls')),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path(
         'api/docs/swagger/',

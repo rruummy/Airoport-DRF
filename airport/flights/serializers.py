@@ -1,14 +1,5 @@
 from rest_framework import serializers
-from api.models.booking_models import Ticket, Flight
-from api.models.aviation_models import Airplane, Airline
-from api.models.geography_models import Country, Airport
-
-
-class TicketSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Ticket
-        fields = '__all__'
-
+from flights.models import Flight, Airport, Airplane, Airline, Country
 
 class FlightSerializer(serializers.ModelSerializer):
     class Meta:
@@ -38,3 +29,4 @@ class AirportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Airport
         fields = '__all__'
+
