@@ -3,13 +3,14 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
-from user.views import RegisterView
+from user.views import RegisterView, root_redirect_view
 
 from rest_framework import routers
 
 router = routers.DefaultRouter()
 
 urlpatterns = [
+    path("", root_redirect_view, name="root-redirect"),
     path("auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("auth/register/", RegisterView.as_view(), name="register" ),
     path("auth/token-refresh/", TokenRefreshView.as_view(), name="token_refresh"),
