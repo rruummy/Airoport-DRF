@@ -19,6 +19,6 @@ class UserProfile(models.Model):
                                 related_name='profile')
     first_name = models.CharField(max_length=24)
     last_name = models.CharField(max_length=24)
-    password_number = models.CharField(max_length=32)
+    passport_number = models.CharField(max_length=32)
     age = models.PositiveIntegerField()
     bio = models.TextField(blank=True)

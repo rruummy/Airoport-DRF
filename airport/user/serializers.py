@@ -9,10 +9,10 @@ class UserSerializer(serializers.ModelSerializer):
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
-    passport_number = serializers.CharField()
-    age = serializers.IntegerField()
+    first_name = serializers.CharField(write_only=True)
+    last_name = serializers.CharField(write_only=True)
+    passport_number = serializers.CharField(write_only=True)
+    age = serializers.IntegerField(write_only=True)
     bio = serializers.CharField(required=False, allow_blank=True, default="")
 
     class Meta:
@@ -45,3 +45,24 @@ class RegisterSerializer(serializers.ModelSerializer):
             **profile_data)
          
         return user
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    def validate_age(self, value):
+        if value > 120:
+            raise serializers.ValidationError("Write correct number.")
+        return value
+    
+    def validate(self, attrs):
+        if attrs["first_name"] == attrs["last_name"]:
+            raise serializers.ValidationError("First name and last name cannot be the same.")
+        return attrs
+    class Meta:
+        model = UserProfile
+        fields = (
+            "first_name",
+            "last_name",
+            "passport_number",
+            "age",
+            "bio",
+        )
+        
