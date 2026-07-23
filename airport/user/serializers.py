@@ -1,13 +1,30 @@
 from rest_framework import serializers
 from user.models import User, UserProfile
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = '__all__'
+import re
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
+    def validate_age(self, value):
+        if value > 120:
+            raise serializers.ValidationError("The age cannot be greater 120")
+        return value
+    def validate_first_name(self, value):
+        if not re.fullmatch(r"[A-Za-z]+", value):
+            raise serializers.ValidationError("Only uppercase and lowercase Latin letters are allowed")
+        return value
+
+    def validate_last_name(self, value):
+        if not re.fullmatch(r"[A-Za-z]+", value):
+            raise serializers.ValidationError("Only uppercase and lowercase Latin letters are allowed")
+        return value
+    def validate_passport_number(self, value):
+        if not re.fullmatch(r"[A-Z]{2}\d{8}", value):
+            raise serializers.ValidationError("Password number should have 2 letters and 8 digits 'AA1234568'")
+        return value
+    def validate(self, attrs):
+        if attrs["first_name"] == attrs["last_name"]:
+            raise serializers.ValidationError("First name and last name cannot be the same.")
+        return attrs
 
     first_name = serializers.CharField(write_only=True)
     last_name = serializers.CharField(write_only=True)
@@ -50,6 +67,21 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def validate_age(self, value):
         if value > 120:
             raise serializers.ValidationError("Write correct number.")
+        return value
+
+    def validate_first_name(self, value):
+        if not re.fullmatch(r"[A-Za-z]+", value):
+            raise serializers.ValidationError("Only uppercase and lowercase Latin letters are allowed")
+        return value
+
+    def validate_last_name(self, value):
+        if not re.fullmatch(r"[A-Za-z]+", value):
+            raise serializers.ValidationError("Only uppercase and lowercase Latin letters are allowed")
+        return value
+
+    def validate_passport_number(self, value):
+        if not re.fullmatch(r"[A-Z]{2}\d{8}", value):
+            raise serializers.ValidationError("Password number should have 2 letters and 8 digits 'AA1234568'")
         return value
     
     def validate(self, attrs):

@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings
+from django.core.validators import MaxLengthValidator, MinLengthValidator
 
 class User(AbstractUser):
     ROLES = [
@@ -19,6 +20,8 @@ class UserProfile(models.Model):
                                 related_name='profile')
     first_name = models.CharField(max_length=24)
     last_name = models.CharField(max_length=24)
-    passport_number = models.CharField(max_length=32)
+    passport_number = models.CharField(max_length=10,
+                                       unique=True,
+                                       validators=[MinLengthValidator(10)])
     age = models.PositiveIntegerField()
     bio = models.TextField(blank=True)
