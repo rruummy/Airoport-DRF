@@ -11,6 +11,10 @@ class User(AbstractUser):
 
     role = models.CharField(max_length=10, choices=ROLES, default='user')
 
+    @property
+    def is_admin_role(self):
+        return self.role == 'admin' or self.is_superuser
+
     def __str__(self):
         return f"{self.username}"
 

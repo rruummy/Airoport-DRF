@@ -1,8 +1,10 @@
 from django.shortcuts import redirect
+from rest_framework.response import Response
 from user.models import User
-from user.serializers import RegisterSerializer, UserProfileSerializer
-from rest_framework import viewsets, permissions, generics
+from user.serializers import RegisterSerializer, UserProfileSerializer, PasswordChangeSerializer
+from rest_framework import viewsets, permissions, generics, status
 from django.http import request
+from user.permissions import IsAdminRole, IsUserRole
 
 def root_redirect_view(request):
     if request.user.is_authenticated:
@@ -13,17 +15,37 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
 
+class ChangePasswordView(generics.UpdateAPIView):
+    serializer_class = PasswordChangeSerializer
+    permission_classes = [IsUserRole]
+    http_method_names = ['patch']
+
+    def get_object(self):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = self.get_object()
+        user.set_password(serializer.validated_data['new_password'])
+        user.save()
+
+        return Response({'detail': 'Password was changed'},
+                        status=status.HTTP_200_OK)
+
 class UserProfileGetView(generics.RetrieveAPIView):
     serializer_class = UserProfileSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsUserRole]
 
     def get_object(self):
         return self.request.user.profile
 
 class UserProfileUpdateView(generics.UpdateAPIView):
     serializer_class = UserProfileSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminRole]
     http_method_names = ["patch"]
 
     def get_object(self):
         return self.request.user.profile
+    
