@@ -14,4 +14,10 @@ class CountrySerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Country
-        fields = ('title', 'code')
+        fields = ('id', 'title', 'code')
+
+class AirportSerializer(serializers.ModelSerializer):
+    country = serializers.PrimaryKeyRelatedField(queryset=Country.objects.all())
+    class Meta:
+        model = Airport
+        fields = ('id', 'name', 'city', 'country')

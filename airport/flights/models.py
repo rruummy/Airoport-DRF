@@ -33,7 +33,7 @@ class Country(models.Model):
         return f"{self.title}"
 
 class Airport(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     city = models.CharField(max_length=255)
 
     country = models.ForeignKey('Country', on_delete=models.CASCADE)
