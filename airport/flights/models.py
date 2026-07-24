@@ -26,12 +26,11 @@ class Flight(models.Model):
         return f'{self.departure_airport} -> {self.arrival_airport}'
 
 class Country(models.Model):
-    title = models.CharField(max_length=255)
+    title = models.CharField(max_length=255, unique=True)
     code = models.CharField(max_length=2, unique=True)
 
     def __str__(self):
-        return self.title
-
+        return f"{self.title}"
 
 class Airport(models.Model):
     name = models.CharField(max_length=255)
@@ -48,7 +47,6 @@ class Airline(models.Model):
 
     def __str__(self):
         return f'{self.name}'
-
 
 class Airplane(models.Model):
     model = models.CharField(max_length=255)
