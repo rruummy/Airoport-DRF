@@ -22,6 +22,9 @@ class Flight(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS)
 
+    airplane = models.ForeignKey('Airplane', on_delete=models.CASCADE, related_name='flights')
+    airline = models.ForeignKey('Airline', on_delete=models.CASCADE, related_name='flights')
+
     def __str__(self):
         return f'{self.departure_airport} -> {self.arrival_airport}'
 

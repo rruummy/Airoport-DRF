@@ -21,3 +21,9 @@ class AirportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Airport
         fields = ('id', 'name', 'city', 'country')
+
+class AirlineSerializer(serializers.ModelSerializer):
+    airport = serializers.PrimaryKeyRelatedField(queryset=Airport.objects.all())
+    class Meta:
+        model = Airline
+        fields = ('id','name', 'airport')
