@@ -20,7 +20,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     
     def validate_passport_number(self, value):
         if not re.fullmatch(r"[A-Z]{2}\d{8}", value):
-            raise serializers.ValidationError("Password number should have 2 letters and 8 digits 'AA1234568'")
+            raise serializers.ValidationError("Passport number should have 2 letters and 8 digits 'AA1234568'")
         if UserProfile.objects.filter(passport_number=value).exists():
             raise serializers.ValidationError("User with this passport number already exist")
         return value

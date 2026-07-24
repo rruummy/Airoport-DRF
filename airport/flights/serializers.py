@@ -27,3 +27,12 @@ class AirlineSerializer(serializers.ModelSerializer):
     class Meta:
         model = Airline
         fields = ('id','name', 'airport')
+
+"""class AirplaneSerializer(serializers.ModelSerializer):
+    def validate_capacity(self, value):
+        if 20 > value > 800:
+            raise serializers.ValidationError("The capacity shoulde be between 20 to 800.")
+    airline = serializers.PrimaryKeyRelatedField(queryset=Airline.objects.all())
+    class Meta:
+        model = Airplane
+        fields = ('id', 'model', 'capacity', 'airline')"""
