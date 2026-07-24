@@ -1,6 +1,4 @@
 from django.db import models
-from user.models import User
-from flights.models import Flight
 
 class Ticket(models.Model):
     STATUS = [
@@ -15,7 +13,13 @@ class Ticket(models.Model):
 
     seat_number = models.PositiveIntegerField()
 
-    status = models.CharField(max_length=20, choices=STATUS)
+    status = models.CharField(max_length=20, choices=STATUS, default='booked')
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['flight', 'seat_number'],
+                                    name='unique_seat_per_flights')
+        ]
 
     def __str__(self):
-        return f'Ticket #{self.id}'
+        return f'Ticket #{self.flight_id}/{self.id}'

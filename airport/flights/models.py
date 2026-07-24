@@ -20,7 +20,7 @@ class Flight(models.Model):
     arrival_time = models.DateTimeField()
 
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(max_length=20, choices=STATUS)
+    status = models.CharField(max_length=20, choices=STATUS, default='scheduled')
 
     airplane = models.ForeignKey('Airplane', on_delete=models.CASCADE, related_name='flights')
     airline = models.ForeignKey('Airline', on_delete=models.CASCADE, related_name='flights')
@@ -46,7 +46,7 @@ class Airport(models.Model):
 
 class Airline(models.Model):
     name = models.CharField(max_length=255)
-    airport = models.ForeignKey('Airport', on_delete=models.CASCADE)
+    airport = models.ManyToManyField('Airport', related_name='airlines')
 
     def __str__(self):
         return f'{self.name}'
