@@ -1,7 +1,9 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings
-from django.core.validators import MaxLengthValidator, MinLengthValidator
+from django.core.validators import MaxLengthValidator, MinLengthValidator, MinValueValidator
+from decimal import Decimal
+from datetime import date
 
 class User(AbstractUser):
     ROLES = [
@@ -27,5 +29,15 @@ class UserProfile(models.Model):
     passport_number = models.CharField(max_length=10,
                                        unique=True,
                                        validators=[MinLengthValidator(10)])
-    age = models.PositiveIntegerField()
+    balance = models.DecimalField(decimal_places=2,
+                                  max_digits=10,
+                                  default=Decimal(0.00),
+                                  validators=[MinValueValidator(0.00)])
+    @property
+    def age(self) -> int:
+
+        today = date.today()
+        return (today.year - self.birth_date.year
+            - ((today.month, today.day) < (self.birth_date.month, self.birth_date.day)))
+    birth_date = models.DateField()
     bio = models.TextField(blank=True)
