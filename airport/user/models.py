@@ -26,9 +26,8 @@ class UserProfile(models.Model):
                                 related_name='profile')
     first_name = models.CharField(max_length=24)
     last_name = models.CharField(max_length=24)
-    passport_number = models.CharField(max_length=10,
-                                       unique=True,
-                                       validators=[MinLengthValidator(10)])
+    passport_number = models.CharField(max_length=64,
+                                       unique=True)
     balance = models.DecimalField(decimal_places=2,
                                   max_digits=10,
                                   default=Decimal(0.00),

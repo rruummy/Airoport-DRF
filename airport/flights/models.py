@@ -1,4 +1,6 @@
 from django.db import models
+from decimal import Decimal
+from django.core.validators import MinValueValidator
 
 class Flight(models.Model):
     STATUS = [
@@ -24,6 +26,11 @@ class Flight(models.Model):
 
     airplane = models.ForeignKey('Airplane', on_delete=models.CASCADE, related_name='flights')
     airline = models.ForeignKey('Airline', on_delete=models.CASCADE, related_name='flights')
+
+    price = models.DecimalField(decimal_places=2,
+                                  max_digits=10,
+                                  default=Decimal(0.00),
+                                  validators=[MinValueValidator(0.00)])
 
     def __str__(self):
         return f'{self.departure_airport} -> {self.arrival_airport}'

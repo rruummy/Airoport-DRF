@@ -3,8 +3,7 @@ from rest_framework.response import Response
 from user.models import User
 from user.serializers import (RegisterSerializer,
                               UserProfileSerializer,
-                              PasswordChangeSerializer,
-                              BalanceSerializer)
+                              PasswordChangeSerializer)
 from rest_framework import viewsets, permissions, generics, status
 from rest_framework.decorators import action
 from django.http import request

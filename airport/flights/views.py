@@ -58,7 +58,7 @@ class AirlinesViewSet(viewsets.ModelViewSet):
 class AirplaneViewSet(viewsets.ModelViewSet):
     queryset = Airplane.objects.all()
     serializer_class = AirplaneSerializer
-    permission_classes = [IsUserRole]
+    permission_classes = [IsAdminOrReadOnly]
 
 class FlightViewSet(viewsets.ModelViewSet):
     queryset = Flight.objects.all()
