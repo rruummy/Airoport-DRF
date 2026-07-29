@@ -24,6 +24,9 @@ load_dotenv(BASE_DIR / '.env')
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 PASSPORT_SECRET = os.getenv("PASSPORT_SECRET")
+STRIPE_SECRET_KEY=os.getenv('STRIPE_SECRET_KEY')
+STRIPE_PUBLIC_KEY=os.getenv('STRIPE_PUBLIC_KEY')
+STRIPE_WEBHOOK_SECRET=os.getenv('STRIPE_WEBHOOK_SECRET')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -45,6 +48,7 @@ INSTALLED_APPS = [
     'user',
     'flights',
     'tickets',
+    'payment',
     'rest_framework.authtoken',
 ]
 SPECTACULAR_SETTINGS = {

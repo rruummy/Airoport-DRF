@@ -1,25 +1,61 @@
-from rest_framework import viewsets, permissions, generics, mixins
-from tickets.serializers import TicketSerializer, BookTicketSerializer
+from rest_framework import viewsets, generics, mixins, status
+from tickets.serializers import TicketSerializer, BookTicketSerializer, MyTicketSerializer
 from tickets.models import Ticket
+from payment.models import Payment
+from payment.services import StripeService
+from rest_framework.response import Response
+from user.permissions import IsAdminRole, IsUserRole
 
 class TicketViewSet(viewsets.ModelViewSet):
     queryset = Ticket.objects.all()
     serializer_class = TicketSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAdminRole]
 
 class BookTicketView(
     mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
     mixins.CreateModelMixin,
     viewsets.GenericViewSet):
-    serializer_class = BookTicketSerializer
-    permission_classes = [permissions.IsAuthenticated]
+
+    permission_classes = [IsUserRole]
+    def get_serializer_class(self):
+        if self.action == "list":
+            return MyTicketSerializer
+        return BookTicketSerializer
 
     def get_queryset(self):
-        return Ticket.objects.filter(user=self.request.user)
+        return (
+            Ticket.objects
+            .filter(user=self.request.user)
+            .select_related("flight")
+        )
 
-    def perform_create(self, serializer):
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
         flight = serializer.validated_data["flight"]
 
-        serializer.save(
-            user=self.request.user,
-            price=flight.price)
+        ticket = serializer.save(
+            user=request.user,
+            price=flight.price,
+            status="pending",
+        )
+
+        payment = Payment.objects.create(
+            ticket=ticket,
+            user=request.user,
+            price=ticket.price,
+        )
+
+        session = StripeService.create_checkout(payment)
+
+        return Response(
+            {
+                "ticket_id": ticket.id,
+                "payment_id": payment.id,
+                "checkout_url": session.url,
+                "message": "Ticket booked successfully. Proceed to payment.",
+            },
+            status=status.HTTP_201_CREATED,
+        )

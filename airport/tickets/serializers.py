@@ -43,3 +43,8 @@ class BookTicketSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop("passport_number", None)
         return Ticket.objects.create(**validated_data)
+
+class MyTicketSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ticket
+        fields = ("id", "flight", "seat_number", "status", "price")

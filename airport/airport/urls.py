@@ -18,6 +18,7 @@ urlpatterns = [
     path('auth/', include('rest_framework.urls')),
 
     path("user/", include("user.urls")),
+    path("", include("payment.urls")),
     path("", include("flights.urls")),
     path("", include("tickets.urls")),
 
