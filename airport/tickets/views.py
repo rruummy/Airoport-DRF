@@ -1,5 +1,6 @@
 from rest_framework import viewsets, generics, mixins, status
 from tickets.serializers import TicketSerializer, BookTicketSerializer, MyTicketSerializer
+from django.db import transaction
 from tickets.models import Ticket
 from payment.models import Payment
 from payment.services import StripeService
@@ -36,17 +37,18 @@ class BookTicketView(
 
         flight = serializer.validated_data["flight"]
 
-        ticket = serializer.save(
-            user=request.user,
-            price=flight.price,
-            status="pending",
-        )
+        with transaction.atomic():
+            ticket = serializer.save(
+                user=request.user,
+                price=flight.price,
+                status="pending",
+            )
 
-        payment = Payment.objects.create(
-            ticket=ticket,
-            user=request.user,
-            price=ticket.price,
-        )
+            payment = Payment.objects.create(
+                ticket=ticket,
+                user=request.user,
+                price=ticket.price,
+            )
 
         session = StripeService.create_checkout(payment)
 
