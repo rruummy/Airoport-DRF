@@ -38,7 +38,6 @@ class AirlineAirportSerializer(serializers.Serializer):
 
     def remove_airports(self, airline):
         airports = self.validated_data['airport_ids']
-        # .remove() відв'язує вказані аеропорти від авіакомпанії
         airline.airport.remove(*airports)
         return airline
 
