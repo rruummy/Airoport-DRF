@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'tickets',
     'payment',
     'rest_framework.authtoken',
+    'django_filters',
 ]
 SPECTACULAR_SETTINGS = {
     'SWAGGER_UI_DIST': 'SIDECAR',  # shorthand to use the sidecar instead
@@ -77,6 +78,9 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_FILTER_BACKENDS': [
+        "django_filters.rest_framework.DjangoFilterBackend",
     ],
 }
 

@@ -26,6 +26,7 @@ class StripeService:
             metadata={"payment_id": payment.id,},
             success_url="http://localhost:8000/payment/success",
             cancel_url="http://localhost:8000/payment/cancel",)
+
         payment.stripe_checkout_session_id = session.id
         payment.save(update_fields=["stripe_checkout_session_id"])
 

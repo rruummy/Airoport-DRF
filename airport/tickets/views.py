@@ -1,6 +1,9 @@
 from rest_framework import viewsets, generics, mixins, status
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter
 from tickets.serializers import TicketSerializer, BookTicketSerializer, MyTicketSerializer
 from django.db import transaction
+from tickets.filters import TicketFilter
 from tickets.models import Ticket
 from payment.models import Payment
 from payment.services import StripeService
@@ -12,6 +15,11 @@ class TicketViewSet(viewsets.ModelViewSet):
     serializer_class = TicketSerializer
     permission_classes = [IsAdminRole]
 
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_class = TicketFilter
+
+    search_fields = ['status', 'flight', 'price']
+
 class BookTicketView(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
@@ -19,6 +27,7 @@ class BookTicketView(
     viewsets.GenericViewSet):
 
     permission_classes = [IsUserRole]
+
     def get_serializer_class(self):
         if self.action == "list":
             return MyTicketSerializer

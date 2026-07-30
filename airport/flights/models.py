@@ -21,7 +21,6 @@ class Flight(models.Model):
     departure_time = models.DateTimeField()
     arrival_time = models.DateTimeField()
 
-    price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS, default='scheduled')
 
     airplane = models.ForeignKey('Airplane', on_delete=models.CASCADE, related_name='flights')
@@ -30,7 +29,8 @@ class Flight(models.Model):
     price = models.DecimalField(decimal_places=2,
                                   max_digits=10,
                                   default=Decimal(0.00),
-                                  validators=[MinValueValidator(0.00)])
+                                  validators=[MinValueValidator(Decimal(0.00))],
+                                  )
 
     def __str__(self):
         return f'{self.departure_airport} -> {self.arrival_airport}'
