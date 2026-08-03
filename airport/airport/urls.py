@@ -7,6 +7,7 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 from user.views import RegisterView, root_redirect_view
+from auths.views import VerifyEmailView, ResendVerificationView
 
 urlpatterns = [
     path("", root_redirect_view, name="root-redirect"),
@@ -15,6 +16,8 @@ urlpatterns = [
     path("auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("auth/register/", RegisterView.as_view(), name="register" ),
     path("auth/token-refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("auth/verify-email/", VerifyEmailView.as_view(), name="verify-email"),
+    path("auth/resend-verification/", ResendVerificationView.as_view()),
     path('auth/', include('rest_framework.urls')),
 
     path("user/", include("user.urls")),

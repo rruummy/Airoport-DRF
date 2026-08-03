@@ -6,18 +6,38 @@ from user.serializers import (RegisterSerializer,
                               PasswordChangeSerializer)
 from rest_framework import viewsets, permissions, generics, status
 from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny
 from django.http import request
 from django.db import transaction
 from user.permissions import IsAdminRole, IsUserRole
+from auths.utils import send_verification_code
 
 def root_redirect_view(request):
-    if request.user.is_authenticated:
-        return redirect("swagger-ui")
-    return redirect("register")
+    return redirect("swagger-ui")
 
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        with transaction.atomic():
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+
+            user = serializer.save()
+
+            send_verification_code(user)
+
+            return Response(
+                {
+                    "message": (
+                        "Registration successful",
+                        "Verification code has been sent to your email"
+                    )
+                },
+                status=status.HTTP_201_CREATED,
+            )
+
 
 class ChangePasswordView(generics.UpdateAPIView):
     serializer_class = PasswordChangeSerializer

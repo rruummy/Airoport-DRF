@@ -11,6 +11,7 @@ class User(AbstractUser):
         ('user', 'User'),
     ]
 
+    email = models.EmailField(unique=True)
     role = models.CharField(max_length=10, choices=ROLES, default='user')
 
     @property

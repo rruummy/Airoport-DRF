@@ -2,10 +2,17 @@ from rest_framework import serializers
 from utils import hash_passport
 from user.models import User, UserProfile
 from django.contrib.auth.password_validation import validate_password
+from django.db import transaction
 import re
 from datetime import date
 
 class RegisterSerializer(serializers.ModelSerializer):
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError(
+                "User with this email already exists."
+            )
+        return value
     def validate_birth_date(self, value):
         if value and value > date.today():
             raise serializers.ValidationError("The birthdate cannot be the future")
@@ -48,6 +55,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         validate_password(value, self.context['request'].user)
         return value
 
+    email = serializers.EmailField(required=True)
     first_name = serializers.CharField(write_only=True)
     last_name = serializers.CharField(write_only=True)
     password = serializers.CharField(write_only=True)
@@ -59,6 +67,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             "username",
+            "email",
             "password",
             "first_name",
             "last_name",
@@ -68,23 +77,25 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
-        profile_data = {
-            "first_name": validated_data.pop("first_name"),
-            "last_name": validated_data.pop("last_name"),
-            "passport_number": hash_passport(validated_data.pop("passport_number")),
-            "birth_date": validated_data.pop("birth_date"),
-            "bio": validated_data.pop("bio"),}
-        
-        password = validated_data.pop("password")
-        user = User(**validated_data)
-        user.set_password(password)
-        user.save()
+        with transaction.atomic():
+            profile_data = {
+                "first_name": validated_data.pop("first_name"),
+                "last_name": validated_data.pop("last_name"),
+                "passport_number": hash_passport(validated_data.pop("passport_number")),
+                "birth_date": validated_data.pop("birth_date"),
+                "bio": validated_data.pop("bio"),}
+            
+            password = validated_data.pop("password")
+            user = User(**validated_data)
+            user.is_active = False
+            user.set_password(password)
+            user.save()
 
-        UserProfile.objects.create(
-            user=user,
-            **profile_data)
-         
-        return user
+            UserProfile.objects.create(
+                user=user,
+                **profile_data)
+            
+            return user
 
 class UserProfileSerializer(serializers.ModelSerializer):
     def validate_first_name(self, value):

@@ -10,12 +10,15 @@ class IsAdminRole(permissions.BasePermission):
         )
 
 class IsUserRole(permissions.BasePermission):
+    message = "Your email is not verified."
+
     def has_permission(self, request, view):
-        return bool(
-            request.user
-            and request.user.is_authenticated
-            and request.user.role == 'user'
-        )
+        if not request.user or not request.user.is_authenticated:
+            return False
+
+        if request.user.role != "user": return False
+
+        return request.user.is_active
 
 class IsAdminOrReadOnly(IsAdminRole, IsUserRole):
     def has_permission(self, request, view):

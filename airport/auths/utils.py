@@ -1,0 +1,42 @@
+import hashlib
+import secrets
+from datetime import timedelta
+
+from django.conf import settings
+from django.core.mail import send_mail
+from django.utils import timezone
+
+from .models import EmailVerificationCode
+
+
+def generate_verification_code():
+    return f"{secrets.randbelow(1_000_000):06d}"
+
+
+def hash_verification_code(code: str) -> str:
+    return hashlib.sha256(code.encode()).hexdigest()
+
+
+def send_verification_code(user):
+    code = generate_verification_code()
+    expires_time = timezone.now() + timedelta(minutes=10)
+
+    EmailVerificationCode.objects.update_or_create(
+        user=user,
+        defaults={
+            "code_hash": hash_verification_code(code),
+            "expires_at": expires_time,
+        },
+    )
+
+    send_mail(
+        subject="Airport DRF | Email verification",
+        message=(
+            f"Hello {user.username},\n\n"
+            f"Your verification code is: {code}\n\n"
+            f"This code expires in 10 minutes ({expires_time.strftime("%d.%m.%Y %H:%M:%S")})"
+        ),
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[user.email],
+        fail_silently=False,
+    )
