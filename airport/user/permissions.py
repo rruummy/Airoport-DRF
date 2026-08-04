@@ -13,12 +13,29 @@ class IsUserRole(permissions.BasePermission):
     message = "Your email is not verified."
 
     def has_permission(self, request, view):
-        if not request.user or not request.user.is_authenticated:
+        if not request.user.is_authenticated:
             return False
 
-        if request.user.role != "user": return False
+        if request.user.role != "user":
+            return False
 
-        return request.user.is_active
+        if not request.user.is_active:
+            self.message = "Your email is not verified."
+            return False
+
+        return True
+
+class IsCompletedProfile(permissions.BasePermission):
+    message = "Complete your profile first."
+
+    def has_permission(self, request, view):
+        return request.user.is_profile_completed
+
+class IsNotCompletedProfile(permissions.BasePermission):
+    message = "Profile is already completed."
+
+    def has_permission(self, request, view):
+        return not request.user.is_profile_completed
 
 class IsAdminOrReadOnly(IsAdminRole, IsUserRole):
     def has_permission(self, request, view):

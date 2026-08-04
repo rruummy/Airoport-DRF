@@ -1,43 +1,39 @@
 from django.shortcuts import redirect
-from rest_framework.response import Response
-from user.models import User
-from user.serializers import (RegisterSerializer,
-                              UserProfileSerializer,
-                              PasswordChangeSerializer)
-from rest_framework import viewsets, permissions, generics, status
-from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny
+from user.serializers import UserProfileSerializer, PasswordChangeSerializer
+from rest_framework import generics
 from django.http import request
-from django.db import transaction
-from user.permissions import IsAdminRole, IsUserRole
-from auths.utils import send_verification_code
+
+from user.permissions import IsUserRole, IsNotCompletedProfile, IsCompletedProfile
 
 def root_redirect_view(request):
     return redirect("swagger-ui")
 
-class RegisterView(generics.CreateAPIView):
-    serializer_class = RegisterSerializer
-    permission_classes = [AllowAny]
+class UserProfileGetView(generics.RetrieveAPIView):
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsUserRole]
 
-    def create(self, request, *args, **kwargs):
-        with transaction.atomic():
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
+    def get_object(self):
+        return self.request.user.profile
 
-            user = serializer.save()
+class UserProfileUpdateView(generics.UpdateAPIView):
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsNotCompletedProfile, IsUserRole]
+    http_method_names = ["patch"]
 
-            send_verification_code(user)
+    def get_object(self):
+        return self.request.user.profile
 
-            return Response(
-                {
-                    "message": (
-                        "Registration successful",
-                        "Verification code has been sent to your email"
-                    )
-                },
-                status=status.HTTP_201_CREATED,
-            )
+    def perform_update(self, serializer):
+        profile = serializer.save()
 
+        if (
+            profile.first_name
+            and profile.last_name
+            and profile.passport_number
+            and profile.birth_date
+        ):
+            profile.user.is_profile_completed = True
+            profile.user.save(update_fields=["is_profile_completed"])
 
 class ChangePasswordView(generics.UpdateAPIView):
     serializer_class = PasswordChangeSerializer
@@ -57,21 +53,6 @@ class ChangePasswordView(generics.UpdateAPIView):
 
         return Response({'detail': 'Password was changed'},
                         status=status.HTTP_200_OK)
-
-class UserProfileGetView(generics.RetrieveAPIView):
-    serializer_class = UserProfileSerializer
-    permission_classes = [IsUserRole]
-
-    def get_object(self):
-        return self.request.user.profile
-
-class UserProfileUpdateView(generics.UpdateAPIView):
-    serializer_class = UserProfileSerializer
-    permission_classes = [IsUserRole]
-    http_method_names = ["patch"]
-
-    def get_object(self):
-        return self.request.user.profile
 
 
         

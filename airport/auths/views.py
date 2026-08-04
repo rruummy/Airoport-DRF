@@ -1,9 +1,21 @@
 from rest_framework import generics, status
+from rest_framework.generics import GenericAPIView
+from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
 
-from auths.utils import send_verification_code
-from auths.serializers import VerifyEmailSerializer, ResendVerificationSerializer
+from django.conf import settings
+from django.db import transaction
+
+from auths.utils import send_verification_code, verify_google_token
+from auths.serializers import VerifyEmailSerializer, ResendVerificationSerializer, RegisterSerializer
+from auths.serializers import GoogleLoginSerializer
+from urllib.parse import urlencode
+import requests
+
+from user.permissions import IsUserRole
+from user.models import User, UserProfile
 
 
 class VerifyEmailView(generics.GenericAPIView):
@@ -40,3 +52,133 @@ class ResendVerificationView(generics.GenericAPIView):
             {"message": "Verification code sent successfully."},
             status=status.HTTP_200_OK,
         )
+
+class RegisterView(generics.CreateAPIView):
+    serializer_class = RegisterSerializer
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        with transaction.atomic():
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+
+            user = serializer.save()
+
+            send_verification_code(user)
+
+            return Response(
+                {
+                    "message": (
+                        "Registration successful",
+                        "Verification code has been sent to your email"
+                    )
+                },
+                status=status.HTTP_201_CREATED,
+            )
+
+class GoogleLoginView(GenericAPIView):
+    serializer_class = GoogleLoginSerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        token = serializer.validated_data["token"]
+
+        try:
+            google_data = verify_google_token(token)
+        except Exception:
+            return Response(
+                {"detail": "Invalid Google token"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        email = google_data["email"]
+
+        with transaction.atomic():
+            try:
+                user = User.objects.get(email=email)
+                created = False
+
+            except User.DoesNotExist:
+                base_username = email.split("@")[0]
+                username = base_username
+
+                counter = 1
+                while User.objects.filter(username=username).exists():
+                    username = f"{base_username}{counter}"
+                    counter += 1
+
+                user = User.objects.create(
+                    username=username,
+                    email=email,
+                    is_active=True,
+                    is_profile_completed=False,
+                )
+                created = True
+
+                UserProfile.objects.create(
+                    user=user,
+                    first_name=google_data.get("given_name", ""),
+                    last_name=google_data.get("family_name", ""),
+                    bio="",
+                )
+
+        refresh = RefreshToken.for_user(user)
+
+        return Response(
+            {
+                "created": created,
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+class GoogleAuthUrlView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        print(settings.GOOGLE_REDIRECT_URL)
+        print(settings.GOOGLE_CLIENT_ID)
+        params = {
+            "client_id": settings.GOOGLE_CLIENT_ID,
+            "redirect_uri": settings.GOOGLE_REDIRECT_URL,
+            "response_type": "code",
+            "scope": "openid email profile",
+            "access_type": "offline",
+            "prompt": "consent",
+        }
+
+        auth_url = (
+            "https://accounts.google.com/o/oauth2/v2/auth?"
+            + urlencode(params)
+        )
+
+        return Response({"authorization_url": auth_url})
+
+class GoogleCallbackView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        code = request.query_params.get("code")
+
+        if not code:
+            return Response(
+                {"detail": "Code is missing"},
+                status=400,
+            )
+
+        token_response = requests.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "code": code,
+                "client_id": settings.GOOGLE_CLIENT_ID,
+                "client_secret": settings.GOOGLE_CLIENT_SECRET,
+                "redirect_uri": settings.GOOGLE_REDIRECT_URL,
+                "grant_type": "authorization_code",
+            },
+        )
+
+        return Response(token_response.json())

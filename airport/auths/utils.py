@@ -6,7 +6,9 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.utils import timezone
 
-from .models import EmailVerificationCode
+from auths.models import EmailVerificationCode
+from google.oauth2 import id_token
+from google.auth.transport import requests
 
 
 def generate_verification_code():
@@ -23,7 +25,7 @@ def send_verification_code(user):
 
     EmailVerificationCode.objects.update_or_create(
         user=user,
-        defaults={
+        defaults={  
             "code_hash": hash_verification_code(code),
             "expires_at": expires_time,
         },
@@ -39,4 +41,11 @@ def send_verification_code(user):
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[user.email],
         fail_silently=False,
+    )
+
+def verify_google_token(token):
+    return id_token.verify_oauth2_token(
+        token,
+        requests.Request(),
+        settings.GOOGLE_CLIENT_ID,
     )

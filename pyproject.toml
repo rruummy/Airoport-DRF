@@ -10,8 +10,11 @@ dependencies = [
     "djangorestframework>=3.17.1",
     "djangorestframework-simplejwt>=5.5.1",
     "drf-spectacular[sidecar]>=0.30.0",
+    "google-auth>=2.56.2",
+    "google-auth-oauthlib>=1.4.0",
     "psycopg2-binary>=2.9.12",
     "python-dotenv>=1.2.2",
+    "requests>=2.34.2",
     "ruff>=0.15.22",
     "stripe>=15.3.1",
 ]

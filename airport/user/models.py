@@ -13,6 +13,7 @@ class User(AbstractUser):
 
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=10, choices=ROLES, default='user')
+    is_profile_completed = models.BooleanField(default=False)
 
     @property
     def is_admin_role(self):
@@ -28,7 +29,9 @@ class UserProfile(models.Model):
     first_name = models.CharField(max_length=24)
     last_name = models.CharField(max_length=24)
     passport_number = models.CharField(max_length=64,
-                                       unique=True)
+                                       unique=True,
+                                       blank=True,
+                                       null=True)
     balance = models.DecimalField(decimal_places=2,
                                   max_digits=10,
                                   default=Decimal(0.00),
@@ -39,5 +42,5 @@ class UserProfile(models.Model):
         today = date.today()
         return (today.year - self.birth_date.year
             - ((today.month, today.day) < (self.birth_date.month, self.birth_date.day)))
-    birth_date = models.DateField()
+    birth_date = models.DateField(blank=True, null=True)
     bio = models.TextField(blank=True)
