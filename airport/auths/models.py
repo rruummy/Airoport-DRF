@@ -14,3 +14,16 @@ class EmailVerificationCode(models.Model):
 
     def __str__(self):
         return f"Verification code for {self.user.email}"
+
+class PasswordResetCode(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="password_reset",
+    )
+
+    code_hash = models.CharField(max_length=64)
+
+    expires_at = models.DateTimeField()
+
+    created_at = models.DateTimeField(auto_now=True)

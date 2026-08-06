@@ -6,7 +6,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from flights.filters import FlightFilter
 from flights.filters import AirportFilter, AirlineFilter
 from flights.models import Country, Airline, Airplane, Airport, Flight
-from user.permissions import IsAdminRole, IsUserRole, IsAdminOrReadOnly
+from user.permissions import IsAdminRole, IsVerifiedUser, IsAdminOrReadOnly
 from flights.serializers import (CountrySerializer,
                                  AirportSerializer,
                                  AirlineSerializer,

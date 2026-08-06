@@ -3,19 +3,24 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 from user.views import root_redirect_view
-from auths.views import VerifyEmailView, ResendVerificationView, RegisterView, GoogleLoginView, GoogleAuthUrlView, GoogleCallbackView
+from auths.views import (VerifyEmailView, ResendVerificationView,
+                         RegisterView, LoginView,
+                         GoogleLoginView, GoogleAuthUrlView, GoogleCallbackView,
+                         ForgotPasswordView, ResetPasswordView)
 
 urlpatterns = [
     path("", root_redirect_view, name="root-redirect"),
     path('admin/', admin.site.urls),
 
-    path("auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("auth/login/", LoginView.as_view(), name="token_obtain_pair"),
     path("auth/login-with-google/get-url", GoogleAuthUrlView.as_view(), name="google_login_url"),
     path("auth/login-with-google/get-token", GoogleCallbackView.as_view(), name="google_get_token"),
     path("auth/login-with-google/", GoogleLoginView.as_view(), name="google_login"),
     path("auth/register/", RegisterView.as_view(), name="register" ),
     path("auth/token-refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("auth/verify-email/", VerifyEmailView.as_view(), name="verify_email"),
+    path("auth/forgot-password/", ForgotPasswordView.as_view(), name="forgot_password"),
+    path("auth/reset-password/", ResetPasswordView.as_view(), name="reset_password"),
     path("auth/resend-verification/", ResendVerificationView.as_view()),
     path('auth/', include('rest_framework.urls')),
 

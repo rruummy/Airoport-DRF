@@ -2,16 +2,18 @@ import hashlib
 import secrets
 from utils import hash_passport
 
+from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
 from django.utils import timezone
 from datetime import date
 from rest_framework import serializers
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from user.models import User, UserProfile
-from auths.models import EmailVerificationCode
-
+from auths.models import EmailVerificationCode, PasswordResetCode
 import re
+
 
 class GoogleLoginSerializer(serializers.Serializer):
     token = serializers.CharField()
@@ -154,3 +156,77 @@ class RegisterSerializer(serializers.ModelSerializer):
                 **profile_data)
             
             return user
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        email = attrs["email"]
+        password = attrs["password"]
+        user = authenticate(
+            request=self.context.get("request"),
+            username=email,
+            password=password,
+        )
+
+        if user is None:
+            raise serializers.ValidationError("Invalid email or password")
+
+        if not user.is_active:
+            raise serializers.ValidationError("Your email is not verified")
+
+        refresh = RefreshToken.for_user(user)
+
+        return {
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+        }
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        try:
+            user = User.objects.get(email=value)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("User with this email does not exist")
+        
+        if not user.is_active:
+            raise serializers.ValidationError("Email is not verified")
+        self.user = user
+        return value
+
+class ResetPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    code = serializers.CharField(min_length=6, max_length=6)
+    new_password = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        email = attrs["email"]
+        code = attrs["code"]
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("Invalid email or code.")
+
+        try:
+            reset = user.password_reset
+        except PasswordResetCode.DoesNotExist:
+            raise serializers.ValidationError("Reset code not found.")
+
+        if reset.expires_at < timezone.now():
+            raise serializers.ValidationError("Reset code has expired.")
+
+        code_hash = hashlib.sha256(code.encode()).hexdigest()
+
+        if not secrets.compare_digest(code_hash, reset.code_hash):
+            raise serializers.ValidationError("Invalid reset code.")
+
+        validate_password(attrs["new_password"], user)
+
+        attrs["user"] = user
+        attrs["reset"] = reset
+
+        return attrs

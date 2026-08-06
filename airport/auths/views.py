@@ -8,14 +8,20 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.conf import settings
 from django.db import transaction
 
-from auths.utils import send_verification_code, verify_google_token
-from auths.serializers import VerifyEmailSerializer, ResendVerificationSerializer, RegisterSerializer
-from auths.serializers import GoogleLoginSerializer
+from auths.utils import send_verification_code, verify_google_token, send_password_reset_code
+from auths.serializers import (VerifyEmailSerializer,
+                               ResendVerificationSerializer,
+                               RegisterSerializer,
+                               LoginSerializer,
+                               GoogleLoginSerializer,
+                               ForgotPasswordSerializer,
+                               ResetPasswordSerializer)
 from urllib.parse import urlencode
 import requests
 
-from user.permissions import IsUserRole
+from user.permissions import IsVerifiedUser
 from user.models import User, UserProfile
+
 
 
 class VerifyEmailView(generics.GenericAPIView):
@@ -140,8 +146,6 @@ class GoogleAuthUrlView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        print(settings.GOOGLE_REDIRECT_URL)
-        print(settings.GOOGLE_CLIENT_ID)
         params = {
             "client_id": settings.GOOGLE_CLIENT_ID,
             "redirect_uri": settings.GOOGLE_REDIRECT_URL,
@@ -182,3 +186,49 @@ class GoogleCallbackView(APIView):
         )
 
         return Response(token_response.json())
+
+class LoginView(GenericAPIView):
+    serializer_class = LoginSerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        return Response(serializer.validated_data)
+
+class ForgotPasswordView(GenericAPIView):
+    serializer_class = ForgotPasswordSerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        send_password_reset_code(serializer.user)
+
+        return Response(
+            {"message": "Password reset code has been sent."}
+        )
+
+class ResetPasswordView(GenericAPIView):
+    serializer_class = ResetPasswordSerializer
+    permission_classes = [AllowAny]
+
+    @transaction.atomic
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.validated_data["user"]
+        reset = serializer.validated_data["reset"]
+
+        user.set_password(serializer.validated_data["new_password"])
+        user.save(update_fields=["password"])
+
+        reset.delete()
+
+        return Response(
+            {"message": "Password changed successfully."},
+            status=status.HTTP_200_OK,
+        )

@@ -100,6 +100,10 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10
 }
 
+AUTHENTICATION_BACKENDS = [
+    "auths.backends.EmailBackend",
+]
+
 ROOT_URLCONF = 'airport.urls'
 
 TEMPLATES = [

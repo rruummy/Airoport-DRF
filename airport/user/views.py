@@ -3,21 +3,21 @@ from user.serializers import UserProfileSerializer, PasswordChangeSerializer
 from rest_framework import generics
 from django.http import request
 
-from user.permissions import IsUserRole, IsNotCompletedProfile, IsCompletedProfile
+from user.permissions import IsVerifiedUser, IsNotCompletedProfile, IsCompletedProfile
 
 def root_redirect_view(request):
     return redirect("swagger-ui")
 
 class UserProfileGetView(generics.RetrieveAPIView):
     serializer_class = UserProfileSerializer
-    permission_classes = [IsUserRole]
+    permission_classes = [IsVerifiedUser]
 
     def get_object(self):
         return self.request.user.profile
 
 class UserProfileUpdateView(generics.UpdateAPIView):
     serializer_class = UserProfileSerializer
-    permission_classes = [IsNotCompletedProfile, IsUserRole]
+    permission_classes = [IsNotCompletedProfile, IsVerifiedUser]
     http_method_names = ["patch"]
 
     def get_object(self):
@@ -37,7 +37,7 @@ class UserProfileUpdateView(generics.UpdateAPIView):
 
 class ChangePasswordView(generics.UpdateAPIView):
     serializer_class = PasswordChangeSerializer
-    permission_classes = [IsUserRole]
+    permission_classes = [IsVerifiedUser]
     http_method_names = ['patch']
 
     def get_object(self):

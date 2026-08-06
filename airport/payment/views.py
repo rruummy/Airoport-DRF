@@ -7,14 +7,14 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from payment.models import Payment
 from tickets.models import Ticket
-from user.permissions import IsAdminRole, IsUserRole, IsAdminOrReadOnly
+from user.permissions import IsAdminRole, IsVerifiedUser, IsAdminOrReadOnly
 from payment.services import StripeService
 
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 class CreateCheckoutView(APIView):
-    permission_classes = [IsUserRole]
+    permission_classes = [IsVerifiedUser]
 
     def post(self, request, pk):
         payment = get_object_or_404(
