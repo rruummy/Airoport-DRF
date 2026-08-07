@@ -1,4 +1,5 @@
 from rest_framework import viewsets, permissions, generics, status
+from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -6,14 +7,18 @@ from django_filters.rest_framework import DjangoFilterBackend
 from flights.filters import FlightFilter
 from flights.filters import AirportFilter, AirlineFilter
 from flights.models import Country, Airline, Airplane, Airport, Flight
-from user.permissions import IsAdminRole, IsUserRole, IsAdminOrReadOnly
+from user.permissions import IsAdminRole, IsVerifiedUser, IsAdminOrReadOnly
 from flights.serializers import (CountrySerializer,
                                  AirportSerializer,
                                  AirlineSerializer,
                                  AirlineAirportSerializer,
                                  AirplaneSerializer,
                                  FlightSerializer,
+                                 WeatherSerializer,
                                  )
+from flights.weather import get_weather_forecast
+from django.shortcuts import get_object_or_404
+
 
 class CountryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Country.objects.all()
@@ -86,3 +91,18 @@ class FlightViewSet(viewsets.ModelViewSet):
     search_fields = ["airline__name"]
 
     ordering_fields = ["price", "departure_time"]
+
+class FlightWeatherView(generics.GenericAPIView):
+    serializer_class = WeatherSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get(self, request, pk):
+        flight = get_object_or_404(Flight, pk=pk)
+        weather = get_weather_forecast(
+            city=flight.arrival_airport.city,
+            arrival_time=flight.arrival_time,
+        )
+
+        serializer = self.get_serializer(weather)
+
+        return Response(serializer.data)

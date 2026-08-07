@@ -8,7 +8,7 @@ from tickets.models import Ticket
 from payment.models import Payment
 from payment.services import StripeService
 from rest_framework.response import Response
-from user.permissions import IsAdminRole, IsUserRole
+from user.permissions import IsAdminRole, IsVerifiedUser
 
 class TicketViewSet(viewsets.ModelViewSet):
     queryset = Ticket.objects.all()
@@ -26,7 +26,7 @@ class BookTicketView(
     mixins.CreateModelMixin,
     viewsets.GenericViewSet):
 
-    permission_classes = [IsUserRole]
+    permission_classes = [IsVerifiedUser]
 
     def get_serializer_class(self):
         if self.action == "list":
