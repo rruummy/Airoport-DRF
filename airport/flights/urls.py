@@ -5,6 +5,7 @@ from flights.views import (CountryViewSet,
                            AirlinesViewSet,
                            AirplaneViewSet,
                            FlightViewSet,
+                           FlightWeatherView,
                            )
 
 router = DefaultRouter()
@@ -16,4 +17,5 @@ router.register(r"flight", FlightViewSet, basename="flight")
 
 urlpatterns = [
     path("", include(router.urls)),
+    path("flight/<int:pk>/weather/", FlightWeatherView.as_view(), name="flight-weather"),
 ]
