@@ -21,3 +21,16 @@ def send_profile_update_email(user, changes):
         recipient_list=[user.email],
         fail_silently=False,
     )
+    
+def send_password_successfully_updated_email(user):
+    send_mail(
+        subject="Airport DRF | Password updated",
+        message=(
+            f"Hello {user.username},\n\n"
+            "Your password was changed.\n\n"
+            "If you did not make these changes, please contact support."
+        ),
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[user.email],
+        fail_silently=False,
+    )

@@ -1,10 +1,12 @@
 from django.shortcuts import redirect
 from user.serializers import UserProfileSerializer, PasswordChangeSerializer
 from rest_framework import generics
+from rest_framework.response import Response
+from django.db import transaction
 from django.http import request
 from user.permissions import IsNotCompletedProfile, IsVerifiedUser
 from user.models import UserProfile
-from emails.utils import send_profile_update_email
+from emails.utils import send_profile_update_email, send_password_successfully_updated_email
 
 from user.permissions import IsVerifiedUser, IsNotCompletedProfile, IsCompletedProfile
 
@@ -77,15 +79,16 @@ class ChangePasswordView(generics.UpdateAPIView):
         return self.request.user
 
     def update(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        with transaction.atomic():
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
 
-        user = self.get_object()
-        user.set_password(serializer.validated_data['new_password'])
-        user.save()
-
-        return Response({'detail': 'Password was changed'},
-                        status=status.HTTP_200_OK)
+            user = self.get_object()
+            user.set_password(serializer.validated_data['new_password'])
+            user.save()
+            send_password_successfully_updated_email(user)
+            
+            return Response({'detail': 'Password was changed'})
 
 
         
