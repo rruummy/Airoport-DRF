@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'auths',
     'rest_framework.authtoken',
     'django_filters',
+    'emails',
 ]
 SPECTACULAR_SETTINGS = {
     'SWAGGER_UI_DIST': 'SIDECAR',  # shorthand to use the sidecar instead

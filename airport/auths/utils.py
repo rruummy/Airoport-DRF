@@ -6,7 +6,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.utils import timezone
 
-from auths.models import EmailVerificationCode, PasswordResetCode
+from emails.models import EmailVerificationCode, PasswordResetCode
 from google.oauth2 import id_token
 from google.auth.transport import requests
 
