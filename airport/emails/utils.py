@@ -1,4 +1,4 @@
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMessage
 from django.conf import settings
 
 
@@ -34,3 +34,50 @@ def send_password_successfully_updated_email(user):
         recipient_list=[user.email],
         fail_silently=False,
     )
+
+def send_ticket_purchase_email(ticket):
+    flight = ticket.flight
+    user = ticket.user
+
+    subject = f"Airport DRF | Ticket #{ticket.id}"
+
+    message = f"""Hello {user.username},
+
+Your ticket has been successfully purchased!
+
+Ticket information:
+--------------------------------
+Ticket: #{ticket.id}
+Status: {ticket.get_status_display()}
+Price: {ticket.price} EUR
+
+Flight:
+Flight ID: #{flight.id}
+
+Departure:
+Airport: {flight.departure_airport.name}
+City: {flight.departure_airport.city}
+Time: {flight.departure_time.strftime("%d.%m.%Y %H:%M")}
+
+Arrival:
+Airport: {flight.arrival_airport.name}
+City: {flight.arrival_airport.city}
+Time: {flight.arrival_time.strftime("%d.%m.%Y %H:%M")}
+
+Seat: {ticket.seat_number}
+Airline: {flight.airline.name}
+Airplane: {flight.airplane.model}
+
+--------------------------------
+
+Thank you for using Airport DRF!
+"""
+
+    email = EmailMessage(
+        subject=subject,
+        body=message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[user.email],
+    )
+
+    email.send(fail_silently=False)
