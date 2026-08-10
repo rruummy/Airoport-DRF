@@ -31,5 +31,3 @@ def send_flight_reminders():
 
             ticket.reminder_sent = True
             ticket.save(update_fields=["reminder_sent"])
-
-            print("REMINDER SENT:", ticket.id)

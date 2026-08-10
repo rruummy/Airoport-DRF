@@ -17,5 +17,3 @@ def cancel_expired_tickets():
     )
 
     count = tickets.update(status="cancelled")
-
-    print(f"Cancelled {count} expired tickets.")
