@@ -76,6 +76,17 @@ SPECTACULAR_SETTINGS = {
     # OTHER SETTINGS
 }
 
+CELERY_BROKER_URL = "redis://redis:6379/0"
+
+CELERY_TIMEZONE = "Europe/Kyiv"
+
+CELERY_BEAT_SCHEDULE = {
+    "send-flight-reminders-every-minute": {
+        "task": "flights.tasks.send_flight_reminders",
+        "schedule": 60.0,
+    },
+}
+
 AUTH_USER_MODEL = 'user.User'
 
 MIDDLEWARE = [

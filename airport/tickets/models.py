@@ -19,7 +19,8 @@ class Ticket(models.Model):
                                   max_digits=10,
                                   default=Decimal(0.00),
                                   validators=[MinValueValidator(0.00)])
-
+    reminder_sent = models.BooleanField(default=False)
+    
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['flight', 'seat_number'],

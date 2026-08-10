@@ -81,3 +81,23 @@ Thank you for using Airport DRF!
     )
 
     email.send(fail_silently=False)
+
+def send_flight_reminder_email(ticket):
+    flight = ticket.flight
+    user = ticket.user
+
+    send_mail(
+        subject="Airport DRF | Flight reminder",
+        message=(
+            f"Hello {user.username},\n\n"
+            f"This is a reminder about your upcoming flight.\n\n"
+            f"Flight: #{flight.id}\n"
+            f"Seat: {ticket.seat_number}\n"
+            f"Departure: {flight.departure_time}\n\n"
+            "Your flight departs in approximately 12 hours.\n\n"
+            "Have a nice flight!"
+        ),
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[user.email],
+        fail_silently=False,
+    )

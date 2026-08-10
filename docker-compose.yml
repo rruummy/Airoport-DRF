@@ -14,6 +14,10 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7
+    restart: always
+
   web:
     build: .
     working_dir: /app/airport
@@ -29,3 +33,23 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  celery:
+    build: .
+    working_dir: /app/airport
+    command: celery -A airport worker --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - db
+
+  celery-beat:
+    build: .
+    working_dir: /app/airport
+    command: celery -A airport beat --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - db
