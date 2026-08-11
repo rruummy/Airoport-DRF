@@ -92,7 +92,16 @@ CELERY_BEAT_SCHEDULE = {
         "task": "tickets.tasks.cancel_expired_tickets",
         "schedule": 60.0,
     },
+    "delete-email-expired-codes-every-minute": {
+        "task": "emails.tasks.delete_email_expired_codes",
+        "schedule": 60.0,
+    },
+    "delete-password-expired-codes-every-minute": {
+        "task": "emails.tasks.delete_password_expired_codes",
+        "schedule": 60.0,
+    },
 }
+
 
 CACHES = {
     "default": {
