@@ -42,6 +42,8 @@ GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 GOOGLE_REDIRECT_URL = os.getenv("GOOGLE_REDIRECT_URL")
 
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
+
+PDF_SERVICE_URL=os.getenv("PDF_SERVICE_URL")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 

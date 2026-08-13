@@ -1,6 +1,7 @@
-from django.core.mail import send_mail, EmailMessage
+from django.core.mail import EmailMessage
 from django.conf import settings
 
+from emails.tasks import send_email_async
 
 def send_profile_update_email(user, changes):
     changes_text = "\n".join(
@@ -8,7 +9,7 @@ def send_profile_update_email(user, changes):
         for field, (old, new) in changes.items()
     )
 
-    send_mail(
+    send_email_async.delay(
         subject="Airport DRF | Profile updated",
         message=(
             f"Hello {user.username},\n\n"
@@ -23,7 +24,7 @@ def send_profile_update_email(user, changes):
     )
     
 def send_password_successfully_updated_email(user):
-    send_mail(
+    send_email_async.delay(
         subject="Airport DRF | Password updated",
         message=(
             f"Hello {user.username},\n\n"
@@ -86,7 +87,7 @@ def send_flight_reminder_email(ticket):
     flight = ticket.flight
     user = ticket.user
 
-    send_mail(
+    send_email_async.delay(
         subject="Airport DRF | Flight reminder",
         message=(
             f"Hello {user.username},\n\n"

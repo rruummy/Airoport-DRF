@@ -3,12 +3,15 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from tickets.serializers import TicketSerializer, BookTicketSerializer, MyTicketSerializer
 from django.db import transaction
+from django.http import HttpResponse
 from tickets.filters import TicketFilter
 from tickets.models import Ticket
 from payment.models import Payment
 from payment.services import StripeService
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from user.permissions import IsAdminRole, IsVerifiedUser
+from tickets.services import generate_ticket_pdf
 
 class TicketViewSet(viewsets.ModelViewSet):
     queryset = Ticket.objects.all()
@@ -70,3 +73,31 @@ class BookTicketView(
             },
             status=status.HTTP_201_CREATED,
         )
+
+class TicketPDFView(APIView):
+    permission_classes = [IsVerifiedUser]
+
+    def get(self, request, ticket_id):
+        ticket = Ticket.objects.select_related(
+            "user",
+            "flight",
+            "flight__departure_airport",
+            "flight__arrival_airport",
+            "flight__airline",
+        ).get(
+            id=ticket_id,
+            user=request.user,
+        )
+        user=request.user
+        pdf = generate_ticket_pdf(ticket, user)
+
+        response = HttpResponse(
+            pdf,
+            content_type="application/pdf",
+        )
+
+        response[
+            "Content-Disposition"
+        ] = f'attachment; filename="ticket-{ticket.id}.pdf"'
+
+        return response

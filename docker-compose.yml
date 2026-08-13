@@ -53,3 +53,9 @@ services:
     depends_on:
       - redis
       - db
+  pdf_generator:
+    build:
+      context: ../PDF Ticket Generator
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8000"

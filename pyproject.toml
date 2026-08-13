@@ -57,3 +57,8 @@ indent-width = 4
 
 [tool.ruff.format]
 quote-style = "single"
+
+[tool.uv.workspace]
+members = [
+    "ticket_service",
+]

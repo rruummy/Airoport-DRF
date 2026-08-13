@@ -30,13 +30,3 @@ def send_email_async(subject, message, recipient):
         recipient_list=[recipient],
         fail_silently=False,
     )
-
-@shared_task
-def send_verification_email(email, code):
-    send_mail(
-        subject="Email verification",
-        message=f"Your verification code is: {code}",
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[email],
-        fail_silently=False,
-    )
