@@ -9,6 +9,8 @@ from payment.models import Payment
 from tickets.models import Ticket
 from user.permissions import IsAdminRole, IsVerifiedUser, IsAdminOrReadOnly
 from payment.services import StripeService
+from emails.utils import send_ticket_purchase_email
+from tickets.tasks import generate_ticket_pdf_task
 
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -43,7 +45,6 @@ class StripeWebhookView(APIView):
     permission_classes = []
 
     def post(self, request):
-
         payload = request.body
         sig_header = request.headers.get("Stripe-Signature")
 
@@ -67,14 +68,23 @@ class StripeWebhookView(APIView):
 
             payment = Payment.objects.get(pk=payment_id)
 
+            if payment.status == "succeeded":
+                return HttpResponse(status=200)
+
             payment.status = "succeeded"
             payment.stripe_payment_intent_id = session["payment_intent"]
-
-            payment.save()
+            payment.save(
+                update_fields=[
+                    "status",
+                    "stripe_payment_intent_id",
+                ]
+            )
 
             ticket = payment.ticket
             ticket.status = "paid"
-            ticket.save()
+            ticket.save(update_fields=["status"])
+
+            generate_ticket_pdf_task.delay(ticket.id)
 
         elif event["type"] == "payment_intent.payment_failed":
 
@@ -85,7 +95,7 @@ class StripeWebhookView(APIView):
             )
 
             payment.status = "failed"
-            payment.save()
+            payment.save(update_fields=["status"])
 
         return HttpResponse(status=200)
 

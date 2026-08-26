@@ -103,6 +103,17 @@ class FlightWeatherView(generics.GenericAPIView):
             arrival_time=flight.arrival_time,
         )
 
-        serializer = self.get_serializer(weather)
+        if weather is None:
+            return Response(
+                {
+                    "detail": (
+                        f"Weather forecast not found for "
+                        f"city '{flight.arrival_airport.city}'."
+                    )
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = WeatherSerializer(weather)
 
         return Response(serializer.data)

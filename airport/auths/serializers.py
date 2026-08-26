@@ -11,7 +11,7 @@ from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from user.models import User, UserProfile
-from auths.models import EmailVerificationCode, PasswordResetCode
+from emails.models import EmailVerificationCode, PasswordResetCode
 import re
 
 

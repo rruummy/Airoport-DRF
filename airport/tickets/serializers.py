@@ -25,6 +25,7 @@ class BookTicketSerializer(serializers.ModelSerializer):
         if Ticket.objects.filter(
             flight=flight,
             seat_number=seat,
+            status__in=("pending", "booked", "paid"),
         ).exists():
             raise serializers.ValidationError({"seat_number": "This seat is already booked."})
 

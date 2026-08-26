@@ -3,12 +3,15 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from tickets.serializers import TicketSerializer, BookTicketSerializer, MyTicketSerializer
 from django.db import transaction
+from django.http import HttpResponse
 from tickets.filters import TicketFilter
 from tickets.models import Ticket
 from payment.models import Payment
 from payment.services import StripeService
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from user.permissions import IsAdminRole, IsVerifiedUser
+from tickets.services import generate_ticket_pdf
 
 class TicketViewSet(viewsets.ModelViewSet):
     queryset = Ticket.objects.all()
@@ -24,20 +27,26 @@ class BookTicketView(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
     mixins.CreateModelMixin,
-    viewsets.GenericViewSet):
-
+    viewsets.GenericViewSet,
+):
     permission_classes = [IsVerifiedUser]
 
     def get_serializer_class(self):
         if self.action == "list":
             return MyTicketSerializer
+
         return BookTicketSerializer
 
     def get_queryset(self):
         return (
             Ticket.objects
             .filter(user=self.request.user)
-            .select_related("flight")
+            .select_related(
+                "flight",
+                "flight__departure_airport",
+                "flight__arrival_airport",
+                "flight__airline",
+            )
         )
 
     def create(self, request, *args, **kwargs):
@@ -70,3 +79,53 @@ class BookTicketView(
             },
             status=status.HTTP_201_CREATED,
         )
+
+    def retrieve(self, request, *args, **kwargs):
+        ticket = self.get_object()
+
+        if not ticket.pdf_file:
+            return Response(
+                {
+                    "detail": "PDF ticket has not been generated yet."
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        response = HttpResponse(
+            ticket.pdf_file.read(),
+            content_type="application/pdf",
+        )
+
+        response["Content-Disposition"] = (
+            f'attachment; filename="ticket-{ticket.id}.pdf"'
+        )
+
+        return response
+
+class TicketPDFView(APIView):
+    permission_classes = [IsVerifiedUser]
+
+    def get(self, request, ticket_id):
+        ticket = Ticket.objects.select_related(
+            "user",
+            "flight",
+            "flight__departure_airport",
+            "flight__arrival_airport",
+            "flight__airline",
+        ).get(
+            id=ticket_id,
+            user=request.user,
+        )
+        user=request.user
+        pdf = generate_ticket_pdf(ticket, user)
+
+        response = HttpResponse(
+            pdf,
+            content_type="application/pdf",
+        )
+
+        response[
+            "Content-Disposition"
+        ] = f'attachment; filename="ticket-{ticket.id}.pdf"'
+
+        return response

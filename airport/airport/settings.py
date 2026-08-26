@@ -42,6 +42,13 @@ GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 GOOGLE_REDIRECT_URL = os.getenv("GOOGLE_REDIRECT_URL")
 
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
+
+PDF_SERVICE_URL=os.getenv("PDF_SERVICE_URL")
+
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
+AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -67,12 +74,48 @@ INSTALLED_APPS = [
     'auths',
     'rest_framework.authtoken',
     'django_filters',
+    'emails',
+    'storages',
 ]
 SPECTACULAR_SETTINGS = {
     'SWAGGER_UI_DIST': 'SIDECAR',  # shorthand to use the sidecar instead
     'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
     'REDOC_DIST': 'SIDECAR',
     # OTHER SETTINGS
+}
+
+from celery.schedules import crontab
+
+CELERY_BROKER_URL = "redis://redis:6379/0"
+
+CELERY_TIMEZONE = "Europe/Kyiv"
+
+CELERY_BEAT_SCHEDULE = {
+    "send-flight-reminders-every-minute": {
+        "task": "flights.tasks.send_flight_reminders",
+        "schedule": 60.0,
+    },
+
+    "cancel-expired-tickets-every-minute": {
+        "task": "tickets.tasks.cancel_expired_tickets",
+        "schedule": 60.0,
+    },
+    "delete-email-expired-codes-every-minute": {
+        "task": "emails.tasks.delete_email_expired_codes",
+        "schedule": 60.0,
+    },
+    "delete-password-expired-codes-every-minute": {
+        "task": "emails.tasks.delete_password_expired_codes",
+        "schedule": 60.0,
+    },
+}
+
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://redis:6379/1",
+    }
 }
 
 AUTH_USER_MODEL = 'user.User'

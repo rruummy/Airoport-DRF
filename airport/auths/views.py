@@ -9,6 +9,7 @@ from django.conf import settings
 from django.db import transaction
 
 from auths.utils import send_verification_code, verify_google_token, send_password_reset_code
+from emails.utils import send_password_successfully_updated_email
 from auths.serializers import (VerifyEmailSerializer,
                                ResendVerificationSerializer,
                                RegisterSerializer,
@@ -215,20 +216,17 @@ class ResetPasswordView(GenericAPIView):
     serializer_class = ResetPasswordSerializer
     permission_classes = [AllowAny]
 
-    @transaction.atomic
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         user = serializer.validated_data["user"]
         reset = serializer.validated_data["reset"]
 
         user.set_password(serializer.validated_data["new_password"])
         user.save(update_fields=["password"])
+        send_password_successfully_updated_email(user)
 
         reset.delete()
-
         return Response(
-            {"message": "Password changed successfully."},
-            status=status.HTTP_200_OK,
+            {"message": "Password changed."}
         )

@@ -1,6 +1,7 @@
 from django.db import models
 from decimal import Decimal
 from django.core.validators import MinValueValidator
+from tickets.storages import TicketStorage
 
 class Ticket(models.Model):
     STATUS = [
@@ -19,11 +20,24 @@ class Ticket(models.Model):
                                   max_digits=10,
                                   default=Decimal(0.00),
                                   validators=[MinValueValidator(0.00)])
+    reminder_sent = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    pdf_file = models.FileField(
+        storage=TicketStorage(),
+        upload_to="",
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['flight', 'seat_number'],
-                                    name='unique_seat_per_flights')
+            models.UniqueConstraint(
+                fields=["flight", "seat_number"],
+                condition=models.Q(
+                    status__in=["pending", "booked", "paid"]
+                ),
+                name="unique_active_seat_per_flight",
+            )
         ]
 
     def __str__(self):
