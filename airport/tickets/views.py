@@ -27,20 +27,26 @@ class BookTicketView(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
     mixins.CreateModelMixin,
-    viewsets.GenericViewSet):
-
+    viewsets.GenericViewSet,
+):
     permission_classes = [IsVerifiedUser]
 
     def get_serializer_class(self):
         if self.action == "list":
             return MyTicketSerializer
+
         return BookTicketSerializer
 
     def get_queryset(self):
         return (
             Ticket.objects
             .filter(user=self.request.user)
-            .select_related("flight")
+            .select_related(
+                "flight",
+                "flight__departure_airport",
+                "flight__arrival_airport",
+                "flight__airline",
+            )
         )
 
     def create(self, request, *args, **kwargs):
@@ -73,6 +79,28 @@ class BookTicketView(
             },
             status=status.HTTP_201_CREATED,
         )
+
+    def retrieve(self, request, *args, **kwargs):
+        ticket = self.get_object()
+
+        if not ticket.pdf_file:
+            return Response(
+                {
+                    "detail": "PDF ticket has not been generated yet."
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        response = HttpResponse(
+            ticket.pdf_file.read(),
+            content_type="application/pdf",
+        )
+
+        response["Content-Disposition"] = (
+            f'attachment; filename="ticket-{ticket.id}.pdf"'
+        )
+
+        return response
 
 class TicketPDFView(APIView):
     permission_classes = [IsVerifiedUser]

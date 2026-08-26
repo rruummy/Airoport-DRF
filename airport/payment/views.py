@@ -10,7 +10,7 @@ from tickets.models import Ticket
 from user.permissions import IsAdminRole, IsVerifiedUser, IsAdminOrReadOnly
 from payment.services import StripeService
 from emails.utils import send_ticket_purchase_email
-from tickets.tasks import send_ticket_email
+from tickets.tasks import generate_ticket_pdf_task
 
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -84,7 +84,7 @@ class StripeWebhookView(APIView):
             ticket.status = "paid"
             ticket.save(update_fields=["status"])
 
-            send_ticket_email.delay(ticket.id)
+            generate_ticket_pdf_task.delay(ticket.id)
 
         elif event["type"] == "payment_intent.payment_failed":
 

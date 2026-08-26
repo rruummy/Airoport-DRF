@@ -44,6 +44,11 @@ GOOGLE_REDIRECT_URL = os.getenv("GOOGLE_REDIRECT_URL")
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
 
 PDF_SERVICE_URL=os.getenv("PDF_SERVICE_URL")
+
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
+AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -70,6 +75,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'django_filters',
     'emails',
+    'storages',
 ]
 SPECTACULAR_SETTINGS = {
     'SWAGGER_UI_DIST': 'SIDECAR',  # shorthand to use the sidecar instead

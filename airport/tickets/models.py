@@ -1,6 +1,7 @@
 from django.db import models
 from decimal import Decimal
 from django.core.validators import MinValueValidator
+from tickets.storages import TicketStorage
 
 class Ticket(models.Model):
     STATUS = [
@@ -21,6 +22,12 @@ class Ticket(models.Model):
                                   validators=[MinValueValidator(0.00)])
     reminder_sent = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    pdf_file = models.FileField(
+        storage=TicketStorage(),
+        upload_to="",
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         constraints = [
