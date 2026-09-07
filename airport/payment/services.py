@@ -31,3 +31,9 @@ class StripeService:
         payment.save(update_fields=["stripe_checkout_session_id"])
 
         return session
+
+    @staticmethod
+    def refund_payment(payment):
+        return stripe.Refund.create(
+            payment_intent=payment.stripe_payment_intent_id,
+        )

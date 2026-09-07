@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     'payment',
     'auths',
     'rest_framework.authtoken',
+    'rest_framework_simplejwt.token_blacklist',
     'django_filters',
     'emails',
     'storages',
@@ -118,6 +119,12 @@ CACHES = {
     }
 }
 
+# How long a cached /flight/ list response (for one specific query string)
+# stays valid before it's recomputed from the DB. Cache entries are also
+# invalidated early whenever a flight is created/updated/deleted - see
+# flights.cache.bump_flight_list_cache_version().
+FLIGHT_LIST_CACHE_TTL = 60
+
 AUTH_USER_MODEL = 'user.User'
 
 MIDDLEWARE = [
@@ -142,7 +149,21 @@ REST_FRAMEWORK = {
         "django_filters.rest_framework.DjangoFilterBackend",
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
+    'PAGE_SIZE': 10,
+
+    # Global throttling as a safety net for every endpoint, plus a
+    # tighter "auth" scope applied explicitly to brute-force-sensitive
+    # views (login, forgot-password, verify-email, ...) via
+    # ScopedRateThrottle + `throttle_scope = "auth"` on those views.
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/minute',
+        'user': '300/minute',
+        'auth': '10/minute',
+    },
 }
 
 AUTHENTICATION_BACKENDS = [
