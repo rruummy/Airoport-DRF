@@ -1,9 +1,11 @@
 from rest_framework import generics, status
 from rest_framework.generics import GenericAPIView
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
 
 from django.conf import settings
 from django.db import transaction
@@ -28,6 +30,8 @@ from user.models import User, UserProfile
 class VerifyEmailView(generics.GenericAPIView):
     serializer_class = VerifyEmailSerializer
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "auth"
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -48,6 +52,8 @@ class VerifyEmailView(generics.GenericAPIView):
 class ResendVerificationView(generics.GenericAPIView):
     serializer_class = ResendVerificationSerializer
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "auth"
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -63,6 +69,8 @@ class ResendVerificationView(generics.GenericAPIView):
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "auth"
 
     def create(self, request, *args, **kwargs):
         with transaction.atomic():
@@ -191,6 +199,8 @@ class GoogleCallbackView(APIView):
 class LoginView(GenericAPIView):
     serializer_class = LoginSerializer
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "auth"
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -201,6 +211,8 @@ class LoginView(GenericAPIView):
 class ForgotPasswordView(GenericAPIView):
     serializer_class = ForgotPasswordSerializer
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "auth"
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -215,6 +227,8 @@ class ForgotPasswordView(GenericAPIView):
 class ResetPasswordView(GenericAPIView):
     serializer_class = ResetPasswordSerializer
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "auth"
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -230,3 +244,33 @@ class ResetPasswordView(GenericAPIView):
         return Response(
             {"message": "Password changed."}
         )
+
+
+class LogoutView(APIView):
+    """Blacklists the refresh token so it can no longer be used to obtain
+    new access tokens, effectively logging the user out on the server side.
+    The (already-issued) access token stays valid until it naturally
+    expires — this endpoint only revokes the refresh token.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        refresh_token = request.data.get("refresh")
+
+        if not refresh_token:
+            return Response(
+                {"detail": "Refresh token is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        except TokenError:
+            return Response(
+                {"detail": "Token is invalid or already blacklisted."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(status=status.HTTP_205_RESET_CONTENT)

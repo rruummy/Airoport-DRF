@@ -84,3 +84,58 @@ class BookTicketViewTests(APITestCase):
         self.assertEqual(response.status_code, 200)
         results = response.data.get("results", response.data)
         self.assertEqual(len(results), 0)
+
+
+class BookTicketRaceConditionTests(APITestCase):
+    """The serializer's own `validate()` already rejects an obviously-taken
+    seat. These tests target the second, lock-protected check in
+    BookTicketView.create() that exists specifically to catch a seat that
+    became taken *after* validation ran but before this request's INSERT -
+    the actual race-condition window between two concurrent requests.
+    """
+
+    def setUp(self):
+        self.flight = create_flight()
+        self.user = create_user(email="racer@example.com", role="user", is_active=True)
+        create_profile(self.user, raw_passport="AB123456")
+        self.url = reverse("book-tickets-list")
+
+    @patch("tickets.serializers.BookTicketSerializer.validate")
+    def test_seat_taken_between_validation_and_insert_returns_409(self, mock_validate):
+        # Simulate another request's ticket being committed right after
+        # this request's (now-stale) validation passed.
+        mock_validate.side_effect = lambda attrs: attrs
+        Ticket.objects.create(
+            user=create_user(email="winner@example.com"),
+            flight=self.flight, seat_number=9,
+            status="booked", price=self.flight.price,
+        )
+
+        self.client.force_authenticate(self.user)
+        response = self.client.post(self.url, {
+            "flight": self.flight.id,
+            "seat_number": 9,
+            "passport_number": "AB123456",
+        })
+
+        self.assertEqual(response.status_code, 409)
+        # Only the winning ticket exists - no duplicate/broken row was written.
+        self.assertEqual(
+            Ticket.objects.filter(flight=self.flight, seat_number=9).count(), 1
+        )
+
+    @patch("tickets.views.Flight.objects.select_for_update")
+    @patch("tickets.views.StripeService.create_checkout")
+    def test_booking_locks_the_flight_row(self, mock_checkout, mock_select_for_update):
+        mock_checkout.return_value = SimpleNamespace(id="cs_1", url="https://stripe.test/pay")
+        mock_select_for_update.return_value.get.return_value = self.flight
+
+        self.client.force_authenticate(self.user)
+        self.client.post(self.url, {
+            "flight": self.flight.id,
+            "seat_number": 2,
+            "passport_number": "AB123456",
+        })
+
+        mock_select_for_update.assert_called_once_with()
+        mock_select_for_update.return_value.get.assert_called_once_with(pk=self.flight.pk)
